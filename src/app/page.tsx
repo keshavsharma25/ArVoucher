@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import { Voucher } from "@/components/Voucher";
 import { Navbar } from "@/components/Navbar";
 import { generateWallet } from "./utils/generateWallet";
+import Arweave from "arweave";
 import { getContract, warp } from "@/app/utils/getContract";
 
 export default function Home() {
@@ -49,29 +50,34 @@ export default function Home() {
     }
   }, [amount, arTokenPrice]);
 
+  const arweave = Arweave.init({});
+
   async function createVoucher() {
-    // const contract = await getContract(
-    //   "9aIjT-6ExptnqHB0nyIxPqDZwA-E9WGx7KiYGv16L4I"
-    // );
+    let intermediaryAddress;
+    const contract = await getContract(
+      "9aIjT-6ExptnqHB0nyIxPqDZwA-E9WGx7KiYGv16L4I"
+    );
 
-    // const callingContract = await warp
-    //   .contract("9aIjT-6ExptnqHB0nyIxPqDZwA-E9WGx7KiYGv16L4I")
-    //   .setEvaluationOptions({
-    //     internalWrites: true,
-    //   })
-    //   .connect("use_wallet");
+    const callingContract = await warp
+      .contract("9aIjT-6ExptnqHB0nyIxPqDZwA-E9WGx7KiYGv16L4I")
+      .setEvaluationOptions({
+        internalWrites: true,
+      })
+      .connect("use_wallet");
 
-    const { jwk } = await generateWallet();
-    console.log("Wallet: ", jwk);
+    const wallet = await generateWallet();
+    await arweave.wallets.jwkToAddress(wallet).then((address) => {
+      console.log("Address: ", address);
+    });
 
-    // const result = await contract.writeInteraction({
-    //   function: 'createVoucher',
-    //   data: {
-    //     voucherHash: 1,
-    //     amount: 10000,
-    //     intermediary:
-    //   }
-    // })
+    const result = await contract.writeInteraction({
+      function: "createVoucher",
+      data: {
+        voucherHash: 1,
+        amount: 10000,
+        intermediary: intermediaryAddress,
+      },
+    });
   }
 
   return (
