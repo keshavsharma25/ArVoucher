@@ -30,7 +30,7 @@ async function createVoucher(state, caller) {
     contractId: input.contractId,
   });
 
-  state.owners[caller].push(voucherHash);
+  state.owners[expiryResult.state.owner].push(voucherHash);
 
   return { state };
 }

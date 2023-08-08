@@ -62,21 +62,28 @@ function result(data) {
  * claim is made.
  */
 function claim(state, caller) {
+  const isRedeemed = state.isRedeemed;
+  const isValid = state.isValid;
+
   const target = input.target;
 
+  isAddress(target, "target");
   if (target !== caller) {
     throw ContractErrors.RuntimeError("Only target can claim");
   }
 
-  if (state.isRedeemed)
+  if (isRedeemed && !isValid)
     throw new ContractErrors.RuntimeError("Voucher is already claimed");
 
-  isAddress(caller, "redeemer");
+  if (!isRedeemed && !isValid && state.expiry === -1)
+    throw ContractErrors.RuntimeError(
+      "Voucher is not valid as its cancelled by owner"
+    );
 
   const intermediary = state.intermediary;
   isAddress(intermediary, "intermediary");
 
-  state = _transfer(intermediary, target, state.amount);
+  state = _transfer(state, intermediary, target, state.amount);
 
   state.isRedeemed = true;
   state.isValid = false;
@@ -102,8 +109,10 @@ function allow(state, caller) {
   if (owner !== caller)
     throw ContractErrors.RuntimeError("Only owner can allow");
 
-  const intermediary = input.intermediary;
+  ContractAssert(input.intermediary, "intermediary is required");
+  ContractAssert(input.amount, "amount is required");
 
+  const intermediary = input.intermediary;
   isAddress(intermediary, "intermediary");
 
   const amount = input.amount;
@@ -113,7 +122,7 @@ function allow(state, caller) {
     throw ContractErrors.AllowanceHasToGtThenZero();
   }
 
-  state = _transfer(owner, intermediary, amount);
+  state = _transfer(state, owner, intermediary, amount);
 
   state.intermediary = intermediary;
 
@@ -142,6 +151,8 @@ function cancel(state, caller) {
 
   if (owner !== caller)
     throw ContractErrors.RuntimeError("Only owner can cancel");
+
+  state = _transfer(state, owner, intermediary, state.amount);
 
   state.expiry = -1;
   state.isValid = false;
