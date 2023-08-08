@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import { Voucher } from "@/components/Voucher";
 import { Navbar } from "@/components/Navbar";
 import { generateWallet } from "./utils/generateWallet";
+import { getContract, warp } from "@/app/utils/getContract";
 
 export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,6 +48,31 @@ export default function Home() {
       setAmountToUSD(0);
     }
   }, [amount, arTokenPrice]);
+
+  async function createVoucher() {
+    // const contract = await getContract(
+    //   "9aIjT-6ExptnqHB0nyIxPqDZwA-E9WGx7KiYGv16L4I"
+    // );
+
+    // const callingContract = await warp
+    //   .contract("9aIjT-6ExptnqHB0nyIxPqDZwA-E9WGx7KiYGv16L4I")
+    //   .setEvaluationOptions({
+    //     internalWrites: true,
+    //   })
+    //   .connect("use_wallet");
+
+    const { jwk } = await generateWallet();
+    console.log("Wallet: ", jwk);
+
+    // const result = await contract.writeInteraction({
+    //   function: 'createVoucher',
+    //   data: {
+    //     voucherHash: 1,
+    //     amount: 10000,
+    //     intermediary:
+    //   }
+    // })
+  }
 
   return (
     <main className="flex flex-col bg-[#131520] min-h-screen items-center justify-center gap-10 p-24">
@@ -189,7 +215,7 @@ export default function Home() {
                     </p>
                   </div>
                   <button
-                    onClick={async () => console.log(await generateWallet())}
+                    onClick={createVoucher}
                     className="bg-[#E2694E] text-white rounded-lg py-3 px-6 font-medium"
                   >
                     + Create voucher
