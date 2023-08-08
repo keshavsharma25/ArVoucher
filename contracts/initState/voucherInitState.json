@@ -1,0 +1,11 @@
+{
+  "voucherHash": "",
+  "owner": "",
+  "redeemer": "",
+  "intermediary": "",
+  "isRedeemed": false,
+  "isValid": true,
+  "createdAt": 0,
+  "expiry": 0,
+  "amount": 0
+}
