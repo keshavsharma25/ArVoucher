@@ -16,12 +16,14 @@ async function createVoucher(state, caller) {
 
   const allowResult = await SmartWeave.contracts.write(input.contractId, {
     function: "allow",
+    from: caller,
     intermediary: intermediary,
     amount: amount,
   });
 
   const expiryResult = await SmartWeave.contracts.write(input.contractId, {
     function: "setExpiry",
+    from: caller,
     expiry: input.expiry,
   });
 
@@ -31,6 +33,8 @@ async function createVoucher(state, caller) {
   });
 
   state.owners[expiryResult.state.owner].push(voucherHash);
+
+  state.noOfVouchers += 1;
 
   return { state };
 }
@@ -45,6 +49,7 @@ async function cancelVoucher(state, caller) {
 
     const result = await SmartWeave.contracts.write(contractId, {
       function: "cancel",
+      target: caller,
     });
 
     return { state };
@@ -143,7 +148,7 @@ async function voucherStatus(state) {
   }
 }
 
-export async function handler(state, action) {
+export async function handle(state, action) {
   const input = action.input;
   const caller = action.caller;
 

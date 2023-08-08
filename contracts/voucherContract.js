@@ -14,6 +14,15 @@ const ContractErrors = {
 };
 
 /**
+ * The function returns the value if it exists, otherwise it returns a default value.
+ * @param value - The value parameter is the value that you want to check if it exists or not.
+ * @param defaultVal - The default value is the value that will be returned if the first parameter,
+ * value, is falsy (i.e., null, undefined, false, 0, NaN, or an empty string).
+ * @returns the value if it is truthy (not null, undefined, false, 0, NaN, or an empty string),
+ * otherwise it returns the default value.
+ */
+
+/**
  * The `isAddress` function is a validation function that checks if a given value is a non-empty
  * string. It takes two parameters: `value` and `name`.
  */
@@ -21,6 +30,14 @@ var isAddress = (value, name) => {
   if (!(typeof value === "string" && value !== "")) {
     throw ContractErrors.RuntimeError(
       `Validation error: "${name}" has to be non-empty string`
+    );
+  }
+};
+
+var isContract = (caller, contractAddr) => {
+  if (contractAddr !== caller) {
+    throw ContractErrors.RuntimeError(
+      `Validation error: "${caller}" not allowed to call this function`
     );
   }
 };
@@ -62,15 +79,14 @@ function result(data) {
  * claim is made.
  */
 function claim(state, caller) {
+  isContract(caller, state.mainContract);
+
   const isRedeemed = state.isRedeemed;
   const isValid = state.isValid;
 
   const target = input.target;
 
   isAddress(target, "target");
-  if (target !== caller) {
-    throw ContractErrors.RuntimeError("Only target can claim");
-  }
 
   if (isRedeemed && !isValid)
     throw new ContractErrors.RuntimeError("Voucher is already claimed");
@@ -103,11 +119,14 @@ function claim(state, caller) {
  * transfer and allowance operation.
  */
 function allow(state, caller) {
+  isContract(caller, state.mainContract);
+
   const owner = state.owner;
   isAddress(owner, "owner");
 
-  if (owner !== caller)
-    throw ContractErrors.RuntimeError("Only owner can allow");
+  const from = input.from;
+
+  if (owner !== from) throw ContractErrors.RuntimeError("Only owner can allow");
 
   ContractAssert(input.intermediary, "intermediary is required");
   ContractAssert(input.amount, "amount is required");
@@ -145,14 +164,15 @@ function allow(state, caller) {
  * @returns an object with the updated state.
  */
 function cancel(state, caller) {
+  isContract(caller, state.mainContract);
+
   const owner = state.owner;
 
   isAddress(owner, "owner");
 
-  if (owner !== caller)
-    throw ContractErrors.RuntimeError("Only owner can cancel");
+  if (owner) throw ContractErrors.RuntimeError("Only owner can cancel");
 
-  state = _transfer(state, owner, intermediary, state.amount);
+  state = _transfer(state, intermediary, owner, state.amount);
 
   state.expiry = -1;
   state.isValid = false;
@@ -290,7 +310,7 @@ function setExpiry(state, caller) {
  * @returns an object with a single property "state", which contains the updated state after the
  * transfer operation.
  */
-function _transfer(state, to, from, amount) {
+function _transfer(state, from, to, amount) {
   const balances = state.balances;
   const fromBalance = getOr(balances[from], 0);
 
@@ -325,7 +345,7 @@ function _transfer(state, to, from, amount) {
  * `claim`, `allow`, `isRedeemed`, `getBalance`, `check_allowance`, or `getOwner`. The specific
  * function that is called depends on the value of `input.function` provided in the `action` parameter.
  */
-export function handler(state, action) {
+export function handle(state, action) {
   const input = action.input;
   const caller = action.caller;
 

@@ -3,6 +3,7 @@
   "owner": "",
   "redeemer": "",
   "intermediary": "",
+  "mainContract": "",
   "isRedeemed": false,
   "isValid": true,
   "createdAt": 0,
