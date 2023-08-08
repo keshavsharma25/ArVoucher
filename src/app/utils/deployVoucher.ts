@@ -1,4 +1,4 @@
-import NodeBundlr from "@bundlr-network/client";
+import { NodeBundlr } from "@bundlr-network/client";
 import { encryptWallet } from "./generateWallet";
 import { warp } from "./getContract";
 
