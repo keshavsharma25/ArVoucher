@@ -3,6 +3,9 @@ import { Dialog, Transition } from "@headlessui/react";
 import Image from "next/image";
 import { Fragment, useEffect, useState } from "react";
 import { clsx } from "clsx";
+import { Voucher } from "@/components/Voucher";
+import { Navbar } from "@/components/Navbar";
+import { generateWallet } from "./utils/generateWallet";
 
 export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,12 +13,21 @@ export default function Home() {
   const [amountToUSD, setAmountToUSD] = useState<number>();
   const [arTokenPrice, setArTokenPrice] = useState<number>();
   const [voucherType, setVoucherType] = useState<"AR" | "Storage">("AR");
+  const [vouchers, setVouchers] = useState([]);
+  const [reedemedModal, setReedemedModal] = useState<boolean>(false);
 
   const closeModal = () => {
     setIsOpen(false);
   };
   const openModal = () => {
     setIsOpen(true);
+  };
+
+  const closeReedemedModal = () => {
+    setReedemedModal(false);
+  };
+  const openReedemedModal = () => {
+    setReedemedModal(true);
   };
 
   useEffect(() => {
@@ -38,28 +50,45 @@ export default function Home() {
 
   return (
     <main className="flex flex-col bg-[#131520] min-h-screen items-center justify-center gap-10 p-24">
-      {/* <button className="px-4 py-2 rounded-md">
-        <Link href={"/create"}>Create Voucher</Link>
-      </button>
-      <button className="px-4 py-2 rounded-md">
-        <Link href={"/voucher"}>Reedem Voucher</Link>
-      </button> */}
-      <div className="w-[196px] h-[216px] relative">
-        <Image
-          className="w-full h-full"
-          alt="hero"
-          quality={70}
-          fill
-          src="/hero.png"
-        />
-      </div>
-      <h1 className="font-medium text-2xl">Create your first voucher</h1>
-      <button
-        onClick={openModal}
-        className="bg-[#E2694E] text-white rounded-lg py-4 px-6 font-medium"
-      >
-        + Create voucher
-      </button>
+      <Navbar onReedmedClick={openReedemedModal} />
+      {vouchers.length <= 0 ? (
+        <>
+          {" "}
+          <div className="w-[196px] h-[216px] relative">
+            <Image
+              className="w-full h-full"
+              alt="hero"
+              quality={70}
+              fill
+              src="/hero.png"
+            />
+          </div>
+          <h1 className="font-medium text-2xl">Create your first voucher</h1>
+          <button
+            onClick={openModal}
+            className="bg-[#E2694E] text-white rounded-lg py-4 px-6 font-medium"
+          >
+            + Create voucher
+          </button>{" "}
+        </>
+      ) : (
+        <div className="flex flex-wrap gap-3">
+          <div
+            onClick={() => setIsOpen(true)}
+            className="bg-[#181B28] cursor-pointer w-60 rounded-2xl flex flex-col justify-center items-center"
+          >
+            <img className="w-40" src="/voucherCoupon.png" alt="" />
+            <h1 className="text-[#E2694E] font-bold">+ Create voucher</h1>
+          </div>
+          <Voucher
+            isReedemd={false}
+            createdAt="12/08/23"
+            expiry="20/12/23"
+            amount="20"
+          />
+        </div>
+      )}
+
       <Transition appear show={isOpen} as={Fragment}>
         <Dialog as="div" className="relative z-10" onClose={closeModal}>
           <Transition.Child
@@ -159,8 +188,61 @@ export default function Home() {
                       <span className="text-white font-bold">$ 20</span>
                     </p>
                   </div>
-                  <button className="bg-[#E2694E] text-white rounded-lg py-3 px-6 font-medium">
+                  <button
+                    onClick={async () => console.log(await generateWallet())}
+                    className="bg-[#E2694E] text-white rounded-lg py-3 px-6 font-medium"
+                  >
                     + Create voucher
+                  </button>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+      <Transition appear show={reedemedModal} as={Fragment}>
+        <Dialog as="div" className="relative z-10" onClose={closeReedemedModal}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md flex flex-col gap-10 transform overflow-hidden rounded-2xl bg-[#181B28] p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-2xl font-medium leading-6 text-white"
+                  >
+                    Reedem Voucher
+                  </Dialog.Title>
+                  <div className="flex flex-col items-start gap-2">
+                    <p>VoucherID</p>
+                    <div className="flex w-full gap-2">
+                      <input
+                        className="w-full px-2 py-2 border-0 rounded-lg bg-[#1D2131] outline-0"
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <button className="bg-[#E2694E] text-white rounded-lg py-3 px-6 font-medium">
+                    Reedem voucher
                   </button>
                 </Dialog.Panel>
               </Transition.Child>
