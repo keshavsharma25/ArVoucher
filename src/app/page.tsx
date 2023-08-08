@@ -8,6 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { generateWallet } from "./utils/generateWallet";
 import Arweave from "arweave";
 import { getContract, warp } from "@/app/utils/getContract";
+import { atomicAssetDeploy } from "@/app/utils/deployVoucher";
 
 export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,7 +54,7 @@ export default function Home() {
   const arweave = Arweave.init({});
 
   async function createVoucher() {
-    let intermediaryAddress;
+    let intermediaryAddress: string | undefined;
     const contract = await getContract(
       "9aIjT-6ExptnqHB0nyIxPqDZwA-E9WGx7KiYGv16L4I"
     );
@@ -67,8 +68,24 @@ export default function Home() {
 
     const wallet = await generateWallet();
     await arweave.wallets.jwkToAddress(wallet).then((address) => {
-      console.log("Address: ", address);
+      intermediaryAddress = address;
     });
+
+    const addr = await window.arweaveWallet.getActiveAddress();
+
+    const { contractTxId } = await atomicAssetDeploy(
+      "JaSkaKD3CIJl9G9gEJtPGZgVZQxz71JaLesBKTaZwFo",
+      wallet,
+      "1",
+      {
+        owner: addr,
+        voucherHash: "1",
+        intermediary: intermediaryAddress as string,
+        redeemer: "xqquqdOuAFXgX7xJvcvm_ygE-_UN-RSOWGZs_luvV54",
+        mainContract: "9aIjT-6ExptnqHB0nyIxPqDZwA-E9WGx7KiYGv16L4I",
+        amount: 1000000,
+      }
+    );
 
     const result = await contract.writeInteraction({
       function: "createVoucher",
@@ -76,8 +93,12 @@ export default function Home() {
         voucherHash: 1,
         amount: 10000,
         intermediary: intermediaryAddress,
+        contractId: contractTxId,
       },
     });
+
+    const data = await contract.readState();
+    console.log("Data: ", data);
   }
 
   return (
