@@ -18,28 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <nav className="bg-[#181B28] fixed w-screen py-3 flex justify-between items-center px-10">
-          <h1 className="font-bold flex justify-center items-center gap-10 text-xl">
-            <Link href={"/"}>ArVoucher</Link>
-            <div className="h-10 w-[1px] bg-white opacity-10"></div>
-            <div className="flex justify-center items-center gap-5">
-              <Link href={"/create"}>
-                <span className="font-normal text-base active:text-[#E2694E]">
-                  Vouchers
-                </span>
-              </Link>
-              <Link className="font-normal text-base" href={"/reedem"}>
-                <span className="font-normal text-base active:text-[#E2694E]">
-                  Redeem Voucher
-                </span>
-              </Link>
-            </div>
-          </h1>
-          <ConnectWallet />
-        </nav>
-        {children}
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
